@@ -1,0 +1,45 @@
+* {
+    font-family: "Courier New", Courier, monospace;
+    overflow: hidden;
+    text-align: center;
+    color: #FFFFFF;
+}
+
+body {
+    background-color: rgb(231, 177, 98);
+    margin: 0;
+    align-content: center;
+}
+
+h1 {
+    font-size: 2em;
+}
+
+header {
+    width: 100%;
+}
+
+#prelude {
+    width: 38em;
+    margin: auto;
+}
+
+#beginButton {
+    width: 6em;
+    height: 2em;
+    margin: auto;
+    color: #111111;
+}
+
+#splash {
+    position: absolute;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+}
+
+#canvasContainer {
+    position: absolute;
+    z-index: -10;
+}
