@@ -4,13 +4,25 @@
  *  Ryan Needham
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 const container = document.getElementById("canvasContainer")
-var inGame = false
+
+var running = false
+
+var GameState = {
+    MENU:     0,
+    FLYING:   1,
+    LANDING:  2,
+    ONFOOT:   3,
+    CUTSCENE: 4
+}
+
+var currentState = GameState.MENU
 
 function runDat () {
-    var   ship
+    var playerShip
+    var playerSprite
     
-    var   width     = window.innerWidth
-    var   height    = window.innerHeight
+    var width     = window.innerWidth
+    var height    = window.innerHeight
     
     //if (width  > 1920) width = 1920
     //if (height > 1080) height = 1080
@@ -38,12 +50,7 @@ function runDat () {
     const FAR        = 10000
 
     const renderer = new THREE.WebGLRenderer({antialias: true})
-    const camera   = new THREE.PerspectiveCamera(
-        VIEW_ANGLE,
-        ASPECT,
-        NEAR,
-        FAR
-    )
+    const camera   = new THREE.PerspectiveCamera(VIEW_ANGLE,ASPECT,NEAR,FAR)
 
     const scene      = new THREE.Scene()
     scene.background = new THREE.Color(0x202020)
@@ -161,20 +168,37 @@ function runDat () {
         }
         
         /* * * * * * * * * * * * * * * *
-         * Ship
+         * playerShip
          * * * * * * * * * * * * * * * */
-        ship = new THREE.Mesh(
+        playerShip = new THREE.Mesh (
             new THREE.BoxBufferGeometry(1, 0.2, 1), 
             new THREE.MeshBasicMaterial({color: 0x424242})
         )
         
-        ship.castShadow = true
-        ship.receiveShadow = true
+        playerShip.castShadow = true
+        playerShip.receiveShadow = true
         
-        ship.position.y = 399
-        ship.position.z = 996
+        playerShip.position.y = 399
+        playerShip.position.z = 996
         
-        scene.add(ship);
+        scene.add(playerShip);
+        
+        /* * * * * * * * * * * * * * * *
+         * playerSprite
+         * * * * * * * * * * * * * * * */
+        playerSprite = new THREE.Mesh (
+            new THREE.CylinderGeometry( 2, 2, 5, 16),
+            new THREE.MeshBasicMaterial({color: 0x000000})
+        )
+        
+        playerSprite.castShadow = true
+        playerSprite.receiveShadow = true
+        
+        playerSprite.position.x = 0
+        playerSprite.position.y = 0
+        playerSprite.position.z = 0
+        
+        scene.add(playerSprite)
         
         /* * * * * * * * * * * * * * * *
          * ON UPDATE
@@ -190,25 +214,59 @@ function runDat () {
                 updateTick()
                 updateInput()
 
+                /** 
+                 *  Animate the stars
+                 */
                 for (var i = 0; i < starCount; i++) {
-                    if (stars[i].position.y > -200) {
-                       stars[i].position.y -= starSpeeds[i];
-                    }
-                    else {
-                        stars[i].position.y = 180
-                    }
+                    if (stars[i].position.y > -200) { stars[i].position.y -= starSpeeds[i] }
+                    else {stars[i].position.y = 180}
+                }
+                
+                /** 
+                 *  When the player is near the planet, stop rotating it
+                 */
+                var distToOrigin = Math.sqrt(
+                    (playerShip.position.x * playerShip.position.x) + 
+                    (playerShip.position.y * playerShip.position.y) +
+                    (playerShip.position.z * playerShip.position.z)
+                )
+                
+                if (distToOrigin > 300) {
+                    // spin planet
+                    mesh.rotation.y += 0.001; 
                 }
 
-                // spin planet
-                mesh.rotation.y += 0.001;   
-
-                // rock the boat: NEEDS TO BE GENTLER
-                /*
-                if (Math.random() > 0.5) { ship.position.x += Math.random() * 0.0012 }
-                else { ship.position.x -= Math.random() * 0.0012 }
-                */
-                
-               // console.out ("(x: , y: , z: )")
+                /** 
+                 *  Finite State Scripting
+                 */
+                switch (currentState) {
+                    case GameState.MENU: {
+                        break;
+                    }
+                    case GameState.FLYING: {
+                        break;
+                    }
+                    case GameState.LANDING: {
+                        if (distToOrigin > 220) {
+                            playerShip.position.x -= playerShip.position.x * 0.01
+                            playerShip.position.y -= playerShip.position.y * 0.01
+                            playerShip.position.z -= playerShip.position.z * 0.01
+                        } else {
+                            playerSprite.position.x = playerShip.position.x - 4
+                            playerSprite.position.y = playerShip.position.y
+                            playerSprite.position.z = playerShip.position.z
+                            
+                            currentState = GameState.ONFOOT
+                        }
+                        break;
+                    }
+                    case GameState.ONFOOT: {
+                        break;
+                    }
+                    case GameState.CUTSCENE: {
+                        break;
+                    }
+                }
                 
                 // Draw the scene
                 renderer.render(scene, camera)
@@ -228,156 +286,143 @@ function runDat () {
 
         // Entry Point
         requestAnimationFrame(update);
-
     }); 
-   
-    var mouseMovementX = 0
-    var mouseMovementY = 0
-
-    var shift    = false
-    var wKey     = false
-    var aKey     = false
-    var sKey     = false
-    var dKey     = false
-    var eKey     = false
-    var qKey     = false
-    var upKey    = false
-    var downKey  = false
-    var leftKey  = false
-    var rightKey = false
-
-    document.body.addEventListener("keydown", function (e) {
-        if (inGame) {
-            switch (e.keyCode) {
-                case 16: shift    = true; break
-                case 37: leftKey  = true; break
-                case 38: upKey    = true; break
-                case 39: rightKey = true; break
-                case 40: downKey  = true; break
-                case 87: wKey     = true; break
-                case 65: aKey     = true; break
-                case 83: sKey     = true; break
-                case 68: dKey     = true; break
-                case 69: eKey     = true; break
-                case 81: qKey     = true; break
-            }   
-        }
-    })
-
-    document.body.addEventListener("keyup", function (e) {
-        if (inGame) {
-            switch (e.keyCode) {
-                case 16: shift    = false; break
-                case 37: leftKey  = false; break
-                case 38: upKey    = false; break
-                case 39: rightKey = false; break
-                case 40: downKey  = false; break
-                case 87: wKey     = false; break
-                case 65: aKey     = false; break
-                case 83: sKey     = false; break
-                case 68: dKey     = false; break
-                case 69: eKey     = false; break
-                case 81: qKey     = false; break
-            }     
-        }  
-    })
-
+    
     function updateInput () {
-        // W - forward
-        if (wKey || upKey) {
-            
-            // do movement
-            if (shift) {
-                
-                // boost on
-                camera.translateZ(-1)
-                ship.translateZ(-1)  
-                
-                // camera back
-                if ((camera.position.x - ship.position.x) < 5) { camera.position.x += 0.01}
-                if ((camera.position.y - ship.position.y) < 5) { camera.position.y += 0.01}
-                if ((camera.position.z - ship.position.z) < 5) { camera.position.z += 0.01}
-            }
-            
-            else {
-                
-                // boost off
-                camera.translateZ(-0.4)
-                ship.translateZ(-0.4)  
-                
-                // camera in
-                if ((camera.position.x - ship.position.x) > 4) { camera.position.x -= 0.01}
-                if ((camera.position.y - ship.position.y) > 4) { camera.position.y -= 0.01}
-                if ((camera.position.z - ship.position.z) > 4) { camera.position.z -= 0.01}
-                
-            }
-
-            // do rotation
-            if (ship.rotation.z < 0.0) {
-                ship.rotation.z += 0.01
-            } else if (ship.rotation.z > 0.0) {
-                ship.rotation.z -= 0.01
-            }
-        } else {
-            // if not moving forward, camera in
-            
-            // camera in
-            if ((camera.position.x - ship.position.x) > 3) { camera.position.x -= 0.01}
-            if ((camera.position.y - ship.position.y) > 3) { camera.position.y -= 0.01}
-            if ((camera.position.z - ship.position.z) > 3) { camera.position.z -= 0.01}
-        }     
-        
-        // A - left
-        if (aKey || leftKey) {
-            
-            // do movement
-            camera.translateX(-0.4) 
-            ship.translateX(-0.4)
-            
-            // do rotation
-            if (ship.rotation.y < 0.2) {
-                ship.rotation.y += 0.01
-            }
-        }
-        
-        // S - back
-        if (sKey || downKey) {
-            
-            // do movement
-            camera.translateZ(0.4) 
-            ship.translateZ(0.4)
-        }
-        
-        // D - right
-        if (dKey || rightKey) {
-            
-            // do movement
-            camera.translateX(0.4)
-            ship.translateX(0.4)
-            
-            // do rotation
-            if (ship.rotation.y> -0.2) {
-                ship.rotation.y -= 0.01
-            }
-        }
-        
-        // E - tilt forward
-        if (eKey) {
-            ship.rotation.x -= 0.01
-        }
-        
-        if (qKey) {
-            ship.rotation.x += 0.01
-        }
-        
-        // correct camrea
-        camera.lookAt(
-            new THREE.Vector3(
-                ship.position.x,
-                ship.position.y + 0.4,
-                ship.position.z
-            )
+        var distToOrigin = Math.sqrt(
+            (playerShip.position.x * playerShip.position.x) + 
+            (playerShip.position.y * playerShip.position.y) +
+            (playerShip.position.z * playerShip.position.z)
         )
+
+        switch (currentState) {
+            case GameState.MENU: {
+                if ((camera.position.x - playerShip.position.x) > 3.6) { camera.position.x -= 0.01}
+                if ((camera.position.y - playerShip.position.y) > 3.6) { camera.position.y -= 0.01}
+                if ((camera.position.z - playerShip.position.z) > 3.6) { camera.position.z -= 0.01}
+                
+                // correct camrea
+                camera.lookAt(
+                    new THREE.Vector3(
+                        playerShip.position.x,
+                        playerShip.position.y + 0.4,
+                        playerShip.position.z
+                    )
+                )
+                
+                break;
+            }
+            case GameState.FLYING: {
+                // W / ^ - forward
+                if (wKey || upKey) {
+                    // do movement
+                    if (shift && (distToOrigin > 260)) {
+                        // boost on
+                        camera.translateZ(-1)
+                        playerShip.translateZ(-1)  
+                        // camera back
+                        if ((camera.position.x - playerShip.position.x) < 5) { camera.position.x += 0.01}
+                        if ((camera.position.y - playerShip.position.y) < 5) { camera.position.y += 0.01}
+                        if ((camera.position.z - playerShip.position.z) < 5) { camera.position.z += 0.01}
+                    } else {
+                        // boost off
+                        camera.translateZ(-0.4)
+                        playerShip.translateZ(-0.4)  
+
+                        // camera in
+                        if ((camera.position.x - playerShip.position.x) > 4) { camera.position.x -= 0.01}
+                        if ((camera.position.y - playerShip.position.y) > 4) { camera.position.y -= 0.01}
+                        if ((camera.position.z - playerShip.position.z) > 4) { camera.position.z -= 0.01}
+                    }
+
+                    // do rotation
+                    if      (playerShip.rotation.z < 0.0) { playerShip.rotation.z += 0.01 }
+                    else if (playerShip.rotation.z > 0.0) { playerShip.rotation.z -= 0.01}
+                } else {
+                    // if not moving forward, camera in
+                    if ((camera.position.x - playerShip.position.x) > 3.6) { camera.position.x -= 0.01}
+                    if ((camera.position.y - playerShip.position.y) > 3.6) { camera.position.y -= 0.01}
+                    if ((camera.position.z - playerShip.position.z) > 3.6) { camera.position.z -= 0.01}
+                }     
+
+                // A / < - left
+                if (aKey || leftKey) {
+                    // do movement
+                    camera.translateX(-0.4) 
+                    playerShip.translateX(-0.4)
+
+                    // do rotation
+                    if (playerShip.rotation.y < 0.2) {
+                        playerShip.rotation.y += 0.01
+                    }
+                }
+
+                // S / V - back
+                if (sKey || downKey) {
+
+                    // do movement
+                    camera.translateZ(0.4) 
+                    playerShip.translateZ(0.4)
+                }
+
+                // D / > - right
+                if (dKey || rightKey) {
+
+                    // do movement
+                    camera.translateX(0.4)
+                    playerShip.translateX(0.4)
+
+                    // do rotation
+                    if (playerShip.rotation.y> -0.2) {
+                        playerShip.rotation.y -= 0.01
+                    }
+                }
+
+                // E - tilt forward
+                if (eKey) { playerShip.rotation.x -= 0.01 }
+                if (qKey) { playerShip.rotation.x += 0.01 }
+
+                // spacebar - land
+                if (spacebar) {
+                    if (distToOrigin < 260) {
+                        currentState = GameState.LANDING
+                    }
+                }
+
+                // correct camrea
+                camera.lookAt(
+                    new THREE.Vector3(
+                        playerShip.position.x,
+                        playerShip.position.y + 0.4,
+                        playerShip.position.z
+                    )
+                )
+                break;
+            }
+            case GameState.LANDING: {
+                camera.lookAt(
+                    new THREE.Vector3(
+                        playerShip.position.x,
+                        playerShip.position.y + 0.4,
+                        playerShip.position.z
+                    )
+                )
+                break;
+            }
+            case GameState.ONFOOT: {
+                camera.lookAt(
+                    new THREE.Vector3(
+                        playerSprite.position.x,
+                        playerSprite.position.y + 0.4,
+                        playerSprite.position.z
+                    )
+                )
+                break;
+            }
+            case GameState.CUTSCENE: {
+                break;
+            }
+        }
     }
 }
 
