@@ -11,12 +11,18 @@ function runDat () {
     
     var   width     = window.innerWidth
     var   height    = window.innerHeight
+    
+    //if (width  > 1920) width = 1920
+    //if (height > 1080) height = 1080
 
     // handle window resizing
     window.addEventListener('resize', resizeCallback, false);
     function resizeCallback () {
         width  = window.innerWidth
         height = window.innerHeight
+        
+        //if (width  > 1920) width = 1920
+        //if (height > 1080) height = 1080
 
         camera.aspect = width/height;
         camera.updateProjectionMatrix();
@@ -44,7 +50,7 @@ function runDat () {
     scene.add(camera)
 
     camera.position.z = 1000
-    camera.position.y = -1
+    camera.position.y = 400
 
     renderer.setSize(width, height)
     renderer.shadowMap.enabled = true
@@ -82,11 +88,13 @@ function runDat () {
      * https://www.turbosquid.com/3d-models/max-planets-moons-sun/1055232 ?
      */
     objLoader.load('assets/planet2.json', function (geometry) {
+        
+        // planet
         var material = new THREE.MeshLambertMaterial({color:0xC19A6B});
         var mesh     = new THREE.Mesh( geometry, material );
 
         mesh.position.x = 0;
-        mesh.position.y = -600;
+        mesh.position.y = 0;
         mesh.position.z = 0;
 
         mesh.receiveShadow = true
@@ -98,6 +106,18 @@ function runDat () {
 
         scene.add(mesh);
 
+        // atmosphere
+        const atmosphere = new THREE.Mesh(
+            new THREE.SphereGeometry( 260, 100, 100 ),               // Vertex Shader
+            new THREE.MeshBasicMaterial({color: 0xFFECB3, transparent: true, opacity: 0.2, side: THREE.DoubleSide})    // Fragment Shader
+        );
+        
+        atmosphere.position.x = 0;
+        atmosphere.position.y = 0;
+        atmosphere.position.z = 0;
+        
+        scene.add(atmosphere)
+        
         var starCount = 1000
         var stars = new Array()
         var starSpeeds = new Array()
@@ -151,7 +171,7 @@ function runDat () {
         ship.castShadow = true
         ship.receiveShadow = true
         
-        ship.position.y = -2
+        ship.position.y = 399
         ship.position.z = 996
         
         scene.add(ship);
@@ -188,6 +208,8 @@ function runDat () {
                 else { ship.position.x -= Math.random() * 0.0012 }
                 */
                 
+               // console.out ("(x: , y: , z: )")
+                
                 // Draw the scene
                 renderer.render(scene, camera)
             }
@@ -217,6 +239,8 @@ function runDat () {
     var aKey     = false
     var sKey     = false
     var dKey     = false
+    var eKey     = false
+    var qKey     = false
     var upKey    = false
     var downKey  = false
     var leftKey  = false
@@ -224,7 +248,7 @@ function runDat () {
 
     document.body.addEventListener("keydown", function (e) {
         if (inGame) {
-            switch (event.keyCode) {
+            switch (e.keyCode) {
                 case 16: shift    = true; break
                 case 37: leftKey  = true; break
                 case 38: upKey    = true; break
@@ -234,13 +258,15 @@ function runDat () {
                 case 65: aKey     = true; break
                 case 83: sKey     = true; break
                 case 68: dKey     = true; break
+                case 69: eKey     = true; break
+                case 81: qKey     = true; break
             }   
         }
     })
 
     document.body.addEventListener("keyup", function (e) {
         if (inGame) {
-            switch (event.keyCode) {
+            switch (e.keyCode) {
                 case 16: shift    = false; break
                 case 37: leftKey  = false; break
                 case 38: upKey    = false; break
@@ -250,7 +276,8 @@ function runDat () {
                 case 65: aKey     = false; break
                 case 83: sKey     = false; break
                 case 68: dKey     = false; break
-                case 27: break
+                case 69: eKey     = false; break
+                case 81: qKey     = false; break
             }     
         }  
     })
@@ -258,25 +285,92 @@ function runDat () {
     function updateInput () {
         // W - forward
         if (wKey || upKey) {
-            camera.translateZ(-0.4)
-            ship.translateZ(-0.4)
-        }        
+            
+            // do movement
+            if (shift) {
+                
+                // boost on
+                camera.translateZ(-1)
+                ship.translateZ(-1)  
+                
+                // camera back
+                if ((camera.position.x - ship.position.x) < 5) { camera.position.x += 0.01}
+                if ((camera.position.y - ship.position.y) < 5) { camera.position.y += 0.01}
+                if ((camera.position.z - ship.position.z) < 5) { camera.position.z += 0.01}
+            }
+            
+            else {
+                
+                // boost off
+                camera.translateZ(-0.4)
+                ship.translateZ(-0.4)  
+                
+                // camera in
+                if ((camera.position.x - ship.position.x) > 4) { camera.position.x -= 0.01}
+                if ((camera.position.y - ship.position.y) > 4) { camera.position.y -= 0.01}
+                if ((camera.position.z - ship.position.z) > 4) { camera.position.z -= 0.01}
+                
+            }
+
+            // do rotation
+            if (ship.rotation.z < 0.0) {
+                ship.rotation.z += 0.01
+            } else if (ship.rotation.z > 0.0) {
+                ship.rotation.z -= 0.01
+            }
+        } else {
+            // if not moving forward, camera in
+            
+            // camera in
+            if ((camera.position.x - ship.position.x) > 3) { camera.position.x -= 0.01}
+            if ((camera.position.y - ship.position.y) > 3) { camera.position.y -= 0.01}
+            if ((camera.position.z - ship.position.z) > 3) { camera.position.z -= 0.01}
+        }     
         
+        // A - left
         if (aKey || leftKey) {
+            
+            // do movement
             camera.translateX(-0.4) 
             ship.translateX(-0.4)
+            
+            // do rotation
+            if (ship.rotation.y < 0.2) {
+                ship.rotation.y += 0.01
+            }
         }
         
+        // S - back
         if (sKey || downKey) {
+            
+            // do movement
             camera.translateZ(0.4) 
             ship.translateZ(0.4)
         }
         
+        // D - right
         if (dKey || rightKey) {
+            
+            // do movement
             camera.translateX(0.4)
             ship.translateX(0.4)
+            
+            // do rotation
+            if (ship.rotation.y> -0.2) {
+                ship.rotation.y -= 0.01
+            }
         }
         
+        // E - tilt forward
+        if (eKey) {
+            ship.rotation.x -= 0.01
+        }
+        
+        if (qKey) {
+            ship.rotation.x += 0.01
+        }
+        
+        // correct camrea
         camera.lookAt(
             new THREE.Vector3(
                 ship.position.x,

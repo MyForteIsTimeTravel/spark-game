@@ -42,4 +42,5 @@ header {
 #canvasContainer {
     position: absolute;
     z-index: -10;
+    
 }
