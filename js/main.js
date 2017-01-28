@@ -219,6 +219,9 @@ function runDat () {
         boost1.translateX(0.32)
         boost3.translateX(-0.32)
         
+        rightWing.translateZ(0.1)
+        leftWing.translateZ(0.1)
+        
         rightWing.translateX(0.75)
         leftWing.translateX(-0.75)
         
