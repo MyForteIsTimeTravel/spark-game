@@ -187,7 +187,7 @@ function runDat () {
          * playerSprite
          * * * * * * * * * * * * * * * */
         playerSprite = new THREE.Mesh (
-            new THREE.CylinderGeometry( 2, 2, 5, 16),
+            new THREE.CylinderGeometry( 0.2, 0.2, 2, 16),
             new THREE.MeshBasicMaterial({color: 0x000000})
         )
         
@@ -197,6 +197,8 @@ function runDat () {
         playerSprite.position.x = 0
         playerSprite.position.y = 0
         playerSprite.position.z = 0
+        
+        playerSprite.rotation.x = 90
         
         scene.add(playerSprite)
         
@@ -247,7 +249,7 @@ function runDat () {
                         break;
                     }
                     case GameState.LANDING: {
-                        if (distToOrigin > 220) {
+                        if (distToOrigin > 240) {
                             playerShip.position.x -= playerShip.position.x * 0.01
                             playerShip.position.y -= playerShip.position.y * 0.01
                             playerShip.position.z -= playerShip.position.z * 0.01
@@ -386,6 +388,7 @@ function runDat () {
                 if (spacebar) {
                     if (distToOrigin < 260) {
                         currentState = GameState.LANDING
+                        spacebar = false
                     }
                 }
 
@@ -410,6 +413,47 @@ function runDat () {
                 break;
             }
             case GameState.ONFOOT: {
+                var distToShip = Math.sqrt(
+                    ((playerShip.position.x - playerSprite.position.x) * (playerShip.position.x - playerSprite.position.x)) + 
+                    ((playerShip.position.y - playerSprite.position.y) * (playerShip.position.y - playerSprite.position.y)) +
+                    ((playerShip.position.z - playerSprite.position.z) * (playerShip.position.z - playerSprite.position.z))
+                )
+                
+                // move forward
+                if (wKey || upKey) {
+                    playerSprite.translateZ(0.1)
+                    camera.translateZ(0.1)
+                }
+                
+                // move backwards
+                if (sKey || downKey) {
+                    playerSprite.translateZ(-0.1)
+                    camera.translateZ(-0.1)
+                }
+                
+                // move left
+                if (aKey || leftKey) {
+                    playerSprite.translateX(0.1)
+                    camera.translateX(0.1)
+                }
+                
+                // move right
+                if (dKey || rightKey) {
+                    playerSprite.translateX(-0.1)
+                    camera.translateX(-0.1)
+                }
+                
+                // enter ship
+                if (spacebar) {
+                    if (distToShip < 10) {
+                        playerSprite.position.x = 0
+                        playerSprite.position.y = 0
+                        playerSprite.position.z = 0
+                        currentState = GameState.FLYING
+                        spacebar = false
+                    }
+                }
+                
                 camera.lookAt(
                     new THREE.Vector3(
                         playerSprite.position.x,
