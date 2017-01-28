@@ -19,6 +19,11 @@ var currentState = GameState.MENU
 
 function runDat () {
     var playerShip
+    var boost1
+    var boost2
+    var boost3
+    var boostColourTicker
+    
     var playerSprite
     
     var width     = window.innerWidth
@@ -97,7 +102,7 @@ function runDat () {
     objLoader.load('assets/planet2.json', function (geometry) {
         
         // planet
-        var material = new THREE.MeshLambertMaterial({color:0xC19A6B});
+        var material = new THREE.MeshLambertMaterial({color:0xA85C2A});
         var mesh     = new THREE.Mesh( geometry, material );
 
         mesh.position.x = 0;
@@ -116,7 +121,7 @@ function runDat () {
         // atmosphere
         const atmosphere = new THREE.Mesh(
             new THREE.SphereGeometry( 260, 100, 100 ),               // Vertex Shader
-            new THREE.MeshBasicMaterial({color: 0xFFECB3, transparent: true, opacity: 0.2, side: THREE.DoubleSide})    // Fragment Shader
+            new THREE.MeshBasicMaterial({color: 0xF8CD8B, transparent: true, opacity: 0.2, side: THREE.DoubleSide})    // Fragment Shader
         );
         
         atmosphere.position.x = 0;
@@ -145,9 +150,9 @@ function runDat () {
             obj.castShadow     = false
             obj.receiveShadow  = false
 
-            obj.position.x = ((betterRand() * 12) * 300)
-            obj.position.y = ((betterRand() * 12) * 300)
-            obj.position.z = ((betterRand() * 12) * 300)
+            obj.position.x = ((betterRand() * 12) * 240)
+            obj.position.y = ((betterRand() * 12) * 240)
+            obj.position.z = ((betterRand() * 12) * 240)
 
             // management
             stars[i] = obj
@@ -175,6 +180,57 @@ function runDat () {
             new THREE.MeshBasicMaterial({color: 0x424242})
         )
         
+        boost1 = new THREE.Mesh (
+            new THREE.CircleGeometry(0.08, 16),
+            new THREE.MeshBasicMaterial( { color: 0x000000 } )
+        ) 
+        
+        boost2 = new THREE.Mesh (
+            new THREE.CircleGeometry(0.10, 16),
+            new THREE.MeshBasicMaterial( { color: 0x000000 } )
+        ) 
+        
+        boost3 = new THREE.Mesh (
+            new THREE.CircleGeometry(0.08, 16),
+            new THREE.MeshBasicMaterial( { color: 0x000000 } )
+        ) 
+        
+        var leftWing = new THREE.Mesh (
+            new THREE.BoxBufferGeometry(0.6, 0.12, 1),
+            new THREE.MeshBasicMaterial({color: 0x363636})
+        )
+        
+        var rightWing = new THREE.Mesh (
+            new THREE.BoxBufferGeometry(0.6, 0.12, 1),
+            new THREE.MeshBasicMaterial({color: 0x363636})
+        )
+        
+        playerShip.add(boost1)
+        playerShip.add(boost2)
+        playerShip.add(boost3)
+        playerShip.add(leftWing)
+        playerShip.add(rightWing)
+        
+        boostColourTicker = 0
+        boost1.translateZ(0.51)
+        boost2.translateZ(0.51)
+        boost3.translateZ(0.51)
+        
+        boost1.translateX(0.32)
+        boost3.translateX(-0.32)
+        
+        rightWing.translateX(0.75)
+        leftWing.translateX(-0.75)
+        
+        rightWing.rotation.z += 0.2
+        leftWing.rotation.z += -0.2
+        
+        rightWing.castShadow = true
+        leftWing.castShadow = true
+        
+        rightWing.receiveShadow = true
+        leftWing.receiveShadow = true
+        
         playerShip.castShadow = true
         playerShip.receiveShadow = true
         
@@ -197,8 +253,6 @@ function runDat () {
         playerSprite.position.x = 0
         playerSprite.position.y = 0
         playerSprite.position.z = 0
-        
-        playerSprite.rotation.x = 90
         
         scene.add(playerSprite)
         
@@ -322,6 +376,13 @@ function runDat () {
                         // boost on
                         camera.translateZ(-1)
                         playerShip.translateZ(-1)  
+                        // booster feedback
+                        if (boostColourTicker < 100) { // 16777215 is 0xFFFFFF as int
+                            boost1.material.color.setHex(boost1.material.color.getHex() + 0x010101)
+                            boost2.material.color.setHex(boost2.material.color.getHex() + 0x010101)
+                            boost3.material.color.setHex(boost3.material.color.getHex() + 0x010101)
+                            boostColourTicker += 1
+                        }
                         // camera back
                         if ((camera.position.x - playerShip.position.x) < 5) { camera.position.x += 0.01}
                         if ((camera.position.y - playerShip.position.y) < 5) { camera.position.y += 0.01}
@@ -329,12 +390,28 @@ function runDat () {
                     } else {
                         // boost off
                         camera.translateZ(-0.4)
-                        playerShip.translateZ(-0.4)  
-
+                        playerShip.translateZ(-0.4) 
+                        // booster feedback
+                        if (boostColourTicker < 50) { // 16777215 is 0xFFFFFF as int
+                            boost1.material.color.setHex(boost1.material.color.getHex() + 0x010101)
+                            boost2.material.color.setHex(boost2.material.color.getHex() + 0x010101)
+                            boost3.material.color.setHex(boost3.material.color.getHex() + 0x010101)
+                            boostColourTicker += 1
+                        } else if (boostColourTicker > 50) {
+                            boost1.material.color.setHex(boost1.material.color.getHex() - 0x010101)
+                            boost2.material.color.setHex(boost2.material.color.getHex() - 0x010101)
+                            boost3.material.color.setHex(boost3.material.color.getHex() - 0x010101)
+                            boostColourTicker -= 1
+                        }
+                        
                         // camera in
                         if ((camera.position.x - playerShip.position.x) > 4) { camera.position.x -= 0.01}
                         if ((camera.position.y - playerShip.position.y) > 4) { camera.position.y -= 0.01}
                         if ((camera.position.z - playerShip.position.z) > 4) { camera.position.z -= 0.01}
+                        // camera in
+                        if ((camera.position.x - playerShip.position.x) < 4) { camera.position.x += 0.01}
+                        if ((camera.position.y - playerShip.position.y) < 4) { camera.position.y += 0.01}
+                        if ((camera.position.z - playerShip.position.z) < 4) { camera.position.z += 0.01}
                     }
 
                     // do rotation
@@ -345,6 +422,12 @@ function runDat () {
                     if ((camera.position.x - playerShip.position.x) > 3.6) { camera.position.x -= 0.01}
                     if ((camera.position.y - playerShip.position.y) > 3.6) { camera.position.y -= 0.01}
                     if ((camera.position.z - playerShip.position.z) > 3.6) { camera.position.z -= 0.01}
+                    if (boostColourTicker > 0) {
+                        boost1.material.color.setHex(boost1.material.color.getHex() - 0x010101)
+                        boost2.material.color.setHex(boost2.material.color.getHex() - 0x010101)
+                        boost3.material.color.setHex(boost3.material.color.getHex() - 0x010101)
+                        boostColourTicker -= 1
+                    }
                 }     
 
                 // A / < - left
@@ -354,9 +437,8 @@ function runDat () {
                     playerShip.translateX(-0.4)
 
                     // do rotation
-                    if (playerShip.rotation.y < 0.2) {
-                        playerShip.rotation.y += 0.01
-                    }
+                    playerShip.rotation.y += 0.01
+    
                 }
 
                 // S / V - back
@@ -375,9 +457,7 @@ function runDat () {
                     playerShip.translateX(0.4)
 
                     // do rotation
-                    if (playerShip.rotation.y> -0.2) {
-                        playerShip.rotation.y -= 0.01
-                    }
+                    playerShip.rotation.y -= 0.01
                 }
 
                 // E - tilt forward
@@ -449,13 +529,28 @@ function runDat () {
                         playerSprite.position.x = 0
                         playerSprite.position.y = 0
                         playerSprite.position.z = 0
+                        
+                        camera.position.x = playerShip.position.x
+                        camera.position.y = playerShip.position.y
+                        camera.position.z = playerShip.position.z
+                        
+                        camera.translateZ(-1)
+                        
+                        camera.lookAt (
+                            new THREE.Vector3 (
+                                playerShip.position.x,
+                                playerShip.position.y + 0.4,
+                                playerShip.position.z
+                            )
+                        )
+                        
                         currentState = GameState.FLYING
                         spacebar = false
                     }
                 }
                 
-                camera.lookAt(
-                    new THREE.Vector3(
+                camera.lookAt (
+                    new THREE.Vector3 (
                         playerSprite.position.x,
                         playerSprite.position.y + 0.4,
                         playerSprite.position.z

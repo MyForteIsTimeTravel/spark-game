@@ -15,13 +15,19 @@ h1 {
     font-size: 2em;
 }
 
+h2 {
+    text-decoration: underline;
+}
+
 header {
     width: 100%;
+    cursor: default;
 }
 
 #prelude {
     width: 38em;
     margin: auto;
+    cursor: default;
 }
 
 #beginButton {
@@ -29,6 +35,10 @@ header {
     height: 2em;
     margin: auto;
     color: #111111;
+}
+
+#beginButton {
+    cursor: pointer;
 }
 
 #splash {
