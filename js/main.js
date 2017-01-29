@@ -6,6 +6,8 @@
 const container = document.getElementById("canvasContainer")
 
 const objective1 = document.getElementById("obj1")
+const objective2 = document.getElementById("obj2")
+const subBox  = document.getElementById("subtitles")
 
 var running = false
 
@@ -16,6 +18,10 @@ var GameState = {
     ONFOOT:   3,
     CUTSCENE: 4
 }
+
+var arrived = false
+
+var scriptDepth = 0
 
 var currentState = GameState.MENU
 
@@ -172,12 +178,6 @@ function runDat () {
         var starCount = 1000
         var stars = new Array()
         var starSpeeds = new Array()
-
-        function betterRand () {
-            var rand = Math.random()
-            if (Math.random() > 0.5) {rand *= -1} 
-            return rand;
-        }
 
         // one way
         for (var i = 0; i < starCount; i++) {
@@ -359,16 +359,25 @@ function runDat () {
                     (playerShip.position.y * playerShip.position.y) +
                     (playerShip.position.z * playerShip.position.z)
                 )
-                
-                objective1.innerHTML = " - Investigate the planet: " + round(distToOrigin - 230, 2);
-                
-                if (distToOrigin - 230 < 0) {
-                    objective1.innerHTML = " - do something else"
-                }
-                
+            
+                                
                 if (distToOrigin > 280) {
                     planetMesh.rotation.y += 0.001; 
                 }
+                
+                /** 
+                 *  Script Objectives
+                 */
+                if (distToOrigin - 230 <= 0) { arrived = true }
+                if (arrived) { objective1.innerHTML = " ▣ Investigate the planet" } 
+                else         { objective1.innerHTML = " ▢ Investigate the planet: " + round(distToOrigin - 230, 0) + " △"; }
+                
+                /** 
+                 *  Script Subtitles (audio later)
+                 */
+                if (distToOrigin - 230 < 800 && scriptDepth != 1) { scriptDepth = 1; subBox.innerHTML = "<h3>Daughter: </h3><p>hey! everything's going well, the expedition is really fun.</p>" }
+                if (distToOrigin - 230 < 650 && scriptDepth != 2) { scriptDepth = 2; subBox.innerHTML = "<h3>Daughter: </h3><p>it's me again. We've been diverted to this weird solar system i've never heard of... oh well, see you soon!</p>" }
+                if (distToOrigin - 230 < 500 && scriptDepth != 3) { scriptDepth = 3; subBox.innerHTML = "<h3>Daughter: </h3><p>help.</p>" }
 
                 /** 
                  *  Finite State Scripting
@@ -465,7 +474,7 @@ function runDat () {
                     playerShip.translateZ(-0.1)
                     
                     // booster feedback
-                    if (boostColourTicker < 25) { // 16777215 is 0xFFFFFF as int
+                    if (boostColourTicker < 42) { // 16777215 is 0xFFFFFF as int
                         boost1.material.color.setHex(boost1.material.color.getHex() + 0x010101)
                         boost2.material.color.setHex(boost2.material.color.getHex() + 0x010101)
                         boost3.material.color.setHex(boost3.material.color.getHex() + 0x010101)
@@ -501,6 +510,10 @@ function runDat () {
                         if ((camera.position.x - playerShip.position.x) < 5) { camera.position.x += 0.01}
                         if ((camera.position.y - playerShip.position.y) < 5) { camera.position.y += 0.01}
                         if ((camera.position.z - playerShip.position.z) < 5) { camera.position.z += 0.01}
+                        // camera shake 
+                        camera.position.x += betterRand() * 0.025
+                        camera.position.y += betterRand() * 0.025
+                        camera.position.z += betterRand() * 0.025
                     } else {
                         // boost off
                         camera.translateZ(-0.2)

@@ -71,3 +71,24 @@ header {
 #userInterface p {
     font-size: 0.6em;
 }
+
+#subtitles {
+    width: 20em;
+    margin-right: auto;
+    margin-left: auto;
+    left: 0;
+    right: 0;
+    text-align: center;
+    position: absolute;
+    bottom: 1em;
+}
+
+#subtitles h3 {
+    display: inline;
+    font-size: 0.26em;
+}
+
+#subtitles p {
+    display: inline;
+    font-size: 0.26em;
+}

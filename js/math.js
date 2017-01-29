@@ -3,3 +3,9 @@ function round(value, precision) {
     var multiplier = Math.pow(10, precision || 0);
     return Math.round(value * multiplier) / multiplier;
 }
+
+function betterRand () {
+    var rand = Math.random()
+    if (Math.random() > 0.5) {rand *= -1} 
+    return rand;
+}
