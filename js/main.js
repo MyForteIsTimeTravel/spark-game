@@ -3,16 +3,25 @@
  *
  *  Ryan Needham
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
-const container  = document.getElementById("canvasContainer")
-const objective1 = document.getElementById("obj1")
-const objective2 = document.getElementById("obj2")
-const subBox     = document.getElementById("subtitles")
+const container     = document.getElementById("canvasContainer")
+const objList = document.getElementById("objectiveList")
+const objective1    = document.getElementById("obj1")
+const objective2    = document.getElementById("obj2")
+const subBox        = document.getElementById("subtitles")
 
 var GameState    = {MENU:0, FLYING:1, LANDING:2, ONFOOT:3, CUTSCENE:4}
 var currentState = GameState.MENU
 var running      = false
 var arrived      = false
 var scriptDepth  = 0
+
+function addObjective (string) {
+    const obj = document.createElement("li")
+    const str = document.createTextNode(" ▢ " + string)
+    
+    obj.appendChild(str)
+    objList.appendChild(obj)
+}
 
 function runDat () {
     var playerSprite
@@ -108,8 +117,14 @@ function runDat () {
     /* * * * * * * * * * * * * * * *
      * World Objects
      * * * * * * * * * * * * * * * */
-    var objLoader = new THREE.JSONLoader();
+    var objLoader     = new THREE.JSONLoader();
+    var atmosphereTex = THREE.ImageUtils.loadTexture("assets/planet.png")
+    var planetTex     = THREE.ImageUtils.loadTexture("assets/planet.jpg")
+    var shipTex       = THREE.ImageUtils.loadTexture("assets/ship.jpg")
     
+    atmosphereTex.needsUpdate = true
+    planetTex.needsUpdate = true
+    shipTex.needsUpdate = true
     /** 
      *  This cannot be allowed to run asynchronously with the rest of the program
      *  or the render calls will throw null errors while this gets dragged off
@@ -121,7 +136,7 @@ function runDat () {
     objLoader.load('assets/planet2.json', function (geometry) {
         
         // planet
-        var material = new THREE.MeshLambertMaterial({color:0xA85C2A});
+        var material = new THREE.MeshLambertMaterial({/*color:0xA85C2A,*/ map: planetTex});
         var planetMesh     = new THREE.Mesh( geometry, material );
 
         planetMesh.position.x = 0;
@@ -149,8 +164,9 @@ function runDat () {
         // atmosphere
         const atmosphere = new THREE.Mesh(
             new THREE.SphereGeometry( 260, 100, 100 ),               // Vertex Shader
-            new THREE.MeshBasicMaterial({color: 0xF8CD8B, transparent: true, opacity: 0.2, side: THREE.DoubleSide})    // Fragment Shader
+            new THREE.MeshBasicMaterial({color: 0xF8CD8B, map: atmosphereTex, transparent: true, opacity: 0.3, side: THREE.DoubleSide})    // Fragment Shader
         );
+        
         
         atmosphere.position.x = 0;
         atmosphere.position.y = 0;
@@ -199,32 +215,32 @@ function runDat () {
          * * * * * * * * * * * * * * * */
         playerShip = new THREE.Mesh (
             new THREE.BoxBufferGeometry(1, 0.2, 1), 
-            new THREE.MeshBasicMaterial({color: 0x424242})
+            new THREE.MeshBasicMaterial({color: 0x525252, map: shipTex})
         )
         
         boost1 = new THREE.Mesh (
             new THREE.CircleGeometry(0.08, 16),
-            new THREE.MeshBasicMaterial( { color: 0x000000 } )
+            new THREE.MeshBasicMaterial( { color: 0x000000  } )
         ) 
         
         boost2 = new THREE.Mesh (
             new THREE.CircleGeometry(0.10, 16),
-            new THREE.MeshBasicMaterial( { color: 0x000000 } )
+            new THREE.MeshBasicMaterial( { color: 0x000000  } )
         ) 
         
         boost3 = new THREE.Mesh (
             new THREE.CircleGeometry(0.08, 16),
-            new THREE.MeshBasicMaterial( { color: 0x000000 } )
+            new THREE.MeshBasicMaterial( { color: 0x000000  } )
         ) 
         
         var leftWing = new THREE.Mesh (
             new THREE.BoxBufferGeometry(0.6, 0.12, 1),
-            new THREE.MeshBasicMaterial({color: 0x363636})
+            new THREE.MeshBasicMaterial({color: 0xAAAAAA, map: shipTex})
         )
         
         var rightWing = new THREE.Mesh (
             new THREE.BoxBufferGeometry(0.6, 0.12, 1),
-            new THREE.MeshBasicMaterial({color: 0x363636})
+            new THREE.MeshBasicMaterial({color: 0xAAAAAA, map: shipTex})
         )
         
         playerShip.add(boost1)
@@ -345,24 +361,26 @@ function runDat () {
             
                                 
                 if (distToOrigin > 280) {
-                    planetMesh.rotation.y += 0.001; 
+                    planetMesh.rotation.y += 0.00065; 
+                    atmosphere.rotation.y += 0.001
+                    atmosphere.rotation.z += 0.0003
                 }
                 
                 /** 
                  *  Script Objectives
                  */
                 if (distToOrigin - 230 <= 0) { arrived = true }
-                if (arrived) { objective1.innerHTML = " ▣ Investigate the planet" } 
+                if (arrived) { objective1.innerHTML = " ▣ Investigate the planet"; } 
                 else         { objective1.innerHTML = " ▢ Investigate the planet: " + round(distToOrigin - 230, 0) + " △"; }
                 
                 /** 
                  *  Script Subtitles (audio later)
                  */
-                if (distToOrigin - 230 < 800 && scriptDepth != 1) { scriptDepth = 1; subBox.innerHTML = "<h3>Daughter: </h3><p>hey! everything's going well, the expedition is really fun.</p>" }
-                if (distToOrigin - 230 < 650 && scriptDepth != 2) { scriptDepth = 2; subBox.innerHTML = "<h3>Daughter: </h3><p>it's me again. We've been diverted to this weird solar system i've never heard of... oh well, see you soon!</p>" }
-                if (distToOrigin - 230 < 500 && scriptDepth != 3) { scriptDepth = 3; subBox.innerHTML = "<h3>Daughter: </h3><p>help.</p>" }
-                if (distToOrigin - 230 < 300 && scriptDepth != 4) { scriptDepth = 4; subBox.innerHTML = "<h3>Daughter: </h3><p>everyone is gone. i need you. find me soon.</p>" }
-
+                if (distToOrigin - 230 < 800 && scriptDepth < 1) { scriptDepth = 1; subBox.innerHTML = "<h3>Daughter: </h3><p>hey! everything's going well, the expedition is really fun.</p>" }
+                if (distToOrigin - 230 < 650 && scriptDepth < 2) { scriptDepth = 2; subBox.innerHTML = "<h3>Daughter: </h3><p>it's me again. We've been diverted to this weird solar system i've never heard of... oh well, see you soon!</p>" }
+                if (distToOrigin - 230 < 500 && scriptDepth < 3) { scriptDepth = 3; subBox.innerHTML = "<h3>Daughter: </h3><p>help.</p>" }
+                if (distToOrigin - 230 < 300 && scriptDepth < 4) { scriptDepth = 4; subBox.innerHTML = "<h3>Daughter: </h3><p>everyone is gone. i need you. find me soon.</p>" }
+                if (arrived                  && scriptDepth < 5) { scriptDepth = 5; subBox.innerHTML = "<h3>You: </h3><p>the whole planet looks deserted</p>"}
                 /** 
                  *  Finite State Scripting
                  */
@@ -475,11 +493,11 @@ function runDat () {
                 
                 // idle flying in aatmosphere
                 if (distToOrigin < 280) {
-                    camera.translateZ(-0.1)
-                    playerShip.translateZ(-0.1)
+                    camera.translateZ(-0.165)
+                    playerShip.translateZ(-0.165)
                     
                     // booster feedback
-                    if (boostColourTicker < 42) { // 16777215 is 0xFFFFFF as int
+                    if (boostColourTicker < 25) { // 16777215 is 0xFFFFFF as int
                         boost1.material.color.setHex(boost1.material.color.getHex() + 0x010101)
                         boost2.material.color.setHex(boost2.material.color.getHex() + 0x010101)
                         boost3.material.color.setHex(boost3.material.color.getHex() + 0x010101)
@@ -512,9 +530,9 @@ function runDat () {
                             boostColourTicker += 1
                         }
                         // camera back and shake
-                        if ((camera.position.x - playerShip.position.x) < 5) { camera.position.x += 0.01} else { camera.position.x += betterRand() * 0.025 }
-                        if ((camera.position.y - playerShip.position.y) < 5) { camera.position.y += 0.01} else { camera.position.y += betterRand() * 0.025 }
-                        if ((camera.position.z - playerShip.position.z) < 5) { camera.position.z += 0.01} else { camera.position.z += betterRand() * 0.025 } 
+                        if ((camera.position.x - playerShip.position.x) < 5) { camera.position.x += 0.01} else { camera.translateX(betterRand() * 0.025) }
+                        if ((camera.position.y - playerShip.position.y) < 5) { camera.position.y += 0.01} else { camera.translateY(betterRand() * 0.025) }
+                        if ((camera.position.z - playerShip.position.z) < 5) { camera.position.z += 0.01} else { camera.translateZ(betterRand() * 0.025) } 
                     } else {
                         // boost off
                         camera.translateZ(-0.2)

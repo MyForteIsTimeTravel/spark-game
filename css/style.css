@@ -2,6 +2,7 @@
     font-family: "Courier New", Courier, monospace;
     overflow: hidden;
     color: #FFFFFF;
+    list-style: none;
 }
 
 body {
@@ -64,12 +65,24 @@ header {
 }
 
 #userInterface h3 {
-    font-size: 0.6em;
+    font-size: 0.86em;
     text-align: left;
+    margin: 0.1em;
 }
 
 #userInterface p {
-    font-size: 0.6em;
+    font-size: 0.86em;
+    margin: 0.1em;
+}
+
+#userInterface ol {
+    padding: 0;
+    margin: 0;
+}
+
+#userInterface ol li {
+    padding: 0;
+    margin: 0;
 }
 
 #subtitles {
@@ -85,10 +98,10 @@ header {
 
 #subtitles h3 {
     display: inline;
-    font-size: 0.26em;
+    font-size: 0.8em;
 }
 
 #subtitles p {
     display: inline;
-    font-size: 0.26em;
+    font-size: 0.8em;
 }
