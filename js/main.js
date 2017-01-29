@@ -3,36 +3,24 @@
  *
  *  Ryan Needham
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
-const container = document.getElementById("canvasContainer")
-
+const container  = document.getElementById("canvasContainer")
 const objective1 = document.getElementById("obj1")
 const objective2 = document.getElementById("obj2")
-const subBox  = document.getElementById("subtitles")
+const subBox     = document.getElementById("subtitles")
 
-var running = false
-
-var GameState = {
-    MENU:     0,
-    FLYING:   1,
-    LANDING:  2,
-    ONFOOT:   3,
-    CUTSCENE: 4
-}
-
-var arrived = false
-
-var scriptDepth = 0
-
+var GameState    = {MENU:0, FLYING:1, LANDING:2, ONFOOT:3, CUTSCENE:4}
 var currentState = GameState.MENU
+var running      = false
+var arrived      = false
+var scriptDepth  = 0
 
 function runDat () {
+    var playerSprite
     var playerShip
     var boost1
     var boost2
     var boost3
     var boostColourTicker
-    
-    var playerSprite
     
     var width     = window.innerWidth
     var height    = window.innerHeight
@@ -80,26 +68,21 @@ function runDat () {
     container.appendChild(renderer.domElement)
     
     // Cutscene letterboxing
-    /*
-    var bottomLetterbox = new THREE.planetMesh (
-        new THREE.BoxBufferGeometry(10, 10, 10), 
-        new THREE.planetMeshBasicMaterial({color: 0x000000})
+    var bottomLetterbox = new THREE.Mesh (
+        new THREE.BoxBufferGeometry(10, 0.4, 1), 
+        new THREE.MeshBasicMaterial({color: 0x121212})
     )
     
-    var topLetterbox = new THREE.planetMesh (
-        new THREE.BoxBufferGeometry(10, 10, 10), 
-        new THREE.planetMeshBasicMaterial({color: 0x000000})
+    var topLetterbox = new THREE.Mesh (
+        new THREE.BoxBufferGeometry(10, 0.4, 1), 
+        new THREE.MeshBasicMaterial({color: 0x121212})
     )
     
     scene.add(bottomLetterbox)
     scene.add(topLetterbox)
     
-    bottomLetterbox.position.x = camera.position
-    topLetterbox.position = camera.position
-    
-    bottomLetterbox.translateZ(-0.2)
-    topLetterbox.translateZ(-0.2)
-    */
+    bottomLetterbox.position = camera.position
+    topLetterbox.position    = camera.position
     
     /* * * * * * * * * * * * * *
      *  Physics World
@@ -378,12 +361,34 @@ function runDat () {
                 if (distToOrigin - 230 < 800 && scriptDepth != 1) { scriptDepth = 1; subBox.innerHTML = "<h3>Daughter: </h3><p>hey! everything's going well, the expedition is really fun.</p>" }
                 if (distToOrigin - 230 < 650 && scriptDepth != 2) { scriptDepth = 2; subBox.innerHTML = "<h3>Daughter: </h3><p>it's me again. We've been diverted to this weird solar system i've never heard of... oh well, see you soon!</p>" }
                 if (distToOrigin - 230 < 500 && scriptDepth != 3) { scriptDepth = 3; subBox.innerHTML = "<h3>Daughter: </h3><p>help.</p>" }
+                if (distToOrigin - 230 < 300 && scriptDepth != 4) { scriptDepth = 4; subBox.innerHTML = "<h3>Daughter: </h3><p>everyone is gone. i need you. find me soon.</p>" }
 
                 /** 
                  *  Finite State Scripting
                  */
                 switch (currentState) {
                     case GameState.MENU: {
+                        bottomLetterbox.position.x = camera.position.x
+                        bottomLetterbox.position.y = camera.position.y
+                        bottomLetterbox.position.z = camera.position.z
+                        
+                        topLetterbox.position.x    = camera.position.x
+                        topLetterbox.position.y    = camera.position.y
+                        topLetterbox.position.z    = camera.position.z
+                        
+                        bottomLetterbox.rotation.x = camera.rotation.x
+                        bottomLetterbox.rotation.y = camera.rotation.y
+                        bottomLetterbox.rotation.z = camera.rotation.z
+                        
+                        topLetterbox.rotation.x = camera.rotation.x
+                        topLetterbox.rotation.y = camera.rotation.y
+                        topLetterbox.rotation.z = camera.rotation.z
+                        
+                        bottomLetterbox.translateY(-2)
+                        bottomLetterbox.translateZ(-5)
+
+                        topLetterbox.translateY(2)
+                        topLetterbox.translateZ(-5)
                         break;
                     }
                     case GameState.FLYING: {
