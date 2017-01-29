@@ -506,14 +506,10 @@ function runDat () {
                             boost3.material.color.setHex(boost3.material.color.getHex() + 0x010101)
                             boostColourTicker += 1
                         }
-                        // camera back
-                        if ((camera.position.x - playerShip.position.x) < 5) { camera.position.x += 0.01}
-                        if ((camera.position.y - playerShip.position.y) < 5) { camera.position.y += 0.01}
-                        if ((camera.position.z - playerShip.position.z) < 5) { camera.position.z += 0.01}
-                        // camera shake 
-                        camera.position.x += betterRand() * 0.025
-                        camera.position.y += betterRand() * 0.025
-                        camera.position.z += betterRand() * 0.025
+                        // camera back and shake
+                        if ((camera.position.x - playerShip.position.x) < 5) { camera.position.x += 0.01} else { camera.position.x += betterRand() * 0.025 }
+                        if ((camera.position.y - playerShip.position.y) < 5) { camera.position.y += 0.01} else { camera.position.y += betterRand() * 0.025 }
+                        if ((camera.position.z - playerShip.position.z) < 5) { camera.position.z += 0.01} else { camera.position.z += betterRand() * 0.025 } 
                     } else {
                         // boost off
                         camera.translateZ(-0.2)
@@ -535,10 +531,6 @@ function runDat () {
                         if ((camera.position.x - playerShip.position.x) > 4) { camera.position.x -= 0.01}
                         if ((camera.position.y - playerShip.position.y) > 4) { camera.position.y -= 0.01}
                         if ((camera.position.z - playerShip.position.z) > 4) { camera.position.z -= 0.01}
-                        // camera in
-                        if ((camera.position.x - playerShip.position.x) < 4) { camera.position.x += 0.01}
-                        if ((camera.position.y - playerShip.position.y) < 4) { camera.position.y += 0.01}
-                        if ((camera.position.z - playerShip.position.z) < 4) { camera.position.z += 0.01}
                     }
 
                     // do rotation
