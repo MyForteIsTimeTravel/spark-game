@@ -1,17 +1,23 @@
 (function(){
+    let gameCanvas    = document.getElementById("canvasContainer")
+    let beginButton   = document.getElementById("beginButton")
+    let splashScreen  = document.getElementById("splash")
+    let userInterface = document.getElementById("userInterface") 
 
-    let gameCanvas   = document.getElementById("canvasContainer")
-    let beginButton  = document.getElementById("beginButton")
-    let splashScreen = document.getElementById("splash")
-
+    // click start
     beginButton.addEventListener("click", function (e) {
+        
+        // hide menu and instructions
         gameCanvas.style.cursor = "none"
         splash.style.display = "none"
 
+        // show ui
+        userInterface.style.display = "block"
+        userInterface.style.position = "absolute"
+        
         currentState = GameState.FLYING
         running = true;
     })
-    
 }());
 
 var mouseMovementX = 0

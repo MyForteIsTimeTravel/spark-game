@@ -5,6 +5,8 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 const container = document.getElementById("canvasContainer")
 
+const objective1 = document.getElementById("obj1")
+
 var running = false
 
 var GameState = {
@@ -61,8 +63,8 @@ function runDat () {
     scene.background = new THREE.Color(0x202020)
     scene.add(camera)
 
-    camera.position.z = 1000
-    camera.position.y = 400
+    camera.position.z = 1005
+    camera.position.y = 402.5
 
     renderer.setSize(width, height)
     renderer.shadowMap.enabled = true
@@ -70,7 +72,35 @@ function runDat () {
 
     // Attach canvas renderer
     container.appendChild(renderer.domElement)
-
+    
+    // Cutscene letterboxing
+    /*
+    var bottomLetterbox = new THREE.planetMesh (
+        new THREE.BoxBufferGeometry(10, 10, 10), 
+        new THREE.planetMeshBasicMaterial({color: 0x000000})
+    )
+    
+    var topLetterbox = new THREE.planetMesh (
+        new THREE.BoxBufferGeometry(10, 10, 10), 
+        new THREE.planetMeshBasicMaterial({color: 0x000000})
+    )
+    
+    scene.add(bottomLetterbox)
+    scene.add(topLetterbox)
+    
+    bottomLetterbox.position.x = camera.position
+    topLetterbox.position = camera.position
+    
+    bottomLetterbox.translateZ(-0.2)
+    topLetterbox.translateZ(-0.2)
+    */
+    
+    /* * * * * * * * * * * * * *
+     *  Physics World
+     * * * * * * * * * * * * * */
+    const physicsWorld = new CANNON.World()
+    physicsWorld.broadphase = new CANNON.NaiveBroadphase()
+    
     /* * * * * * * * * * * * * *
      * Lighting
      * * * * * * * * * * * * * */
@@ -103,21 +133,30 @@ function runDat () {
         
         // planet
         var material = new THREE.MeshLambertMaterial({color:0xA85C2A});
-        var mesh     = new THREE.Mesh( geometry, material );
+        var planetMesh     = new THREE.Mesh( geometry, material );
 
-        mesh.position.x = 0;
-        mesh.position.y = 0;
-        mesh.position.z = 0;
+        planetMesh.position.x = 0;
+        planetMesh.position.y = 0;
+        planetMesh.position.z = 0;
 
-        mesh.receiveShadow = true
-        mesh.castShadow    = true
+        planetMesh.receiveShadow = true
+        planetMesh.castShadow    = true
         
-        mesh.scale.x = 10
-        mesh.scale.y = 10
-        mesh.scale.z = 10
+        planetMesh.scale.x = 10
+        planetMesh.scale.y = 10
+        planetMesh.scale.z = 10
 
-        scene.add(mesh);
+        scene.add(planetMesh);
+        
+        // planet collision mesh
+        var planetCollider = new CANNON.Body({
+            mass: 4000,
+            shape: new CANNON.Sphere(200)
+        })
 
+        planetCollider.position.set(planetMesh.position.x, planetMesh.position.y, planetMesh.position.z)
+        physicsWorld.add(planetCollider)
+        
         // atmosphere
         const atmosphere = new THREE.Mesh(
             new THREE.SphereGeometry( 260, 100, 100 ),               // Vertex Shader
@@ -242,6 +281,15 @@ function runDat () {
         
         scene.add(playerShip);
         
+        // playerShip collider
+        var playerShipCollider = new CANNON.Body({
+            mass: 4,
+            shape: new CANNON.Box(new CANNON.Vec3())
+        })
+        
+        playerShipCollider.position.set(playerShip.position.x, playerShip.position.y, playerShip.position.z)
+        physicsWorld.add(playerShipCollider)
+        
         /* * * * * * * * * * * * * * * *
          * playerSprite
          * * * * * * * * * * * * * * * */
@@ -272,6 +320,28 @@ function runDat () {
             if (!paused) {
                 updateTick()
                 updateInput()
+                
+                updatePhysicsWorld()
+                        // update positions
+                        planetCollider.position.x = planetMesh.position.x
+                        planetCollider.position.y = planetMesh.position.y
+                        planetCollider.position.z = planetMesh.position.z
+
+                        playerShipCollider.position.x = playerShip.position.x
+                        playerShipCollider.position.y = playerShip.position.y
+                        playerShipCollider.position.z = playerShip.position.z
+
+                        // test collisions
+                        physicsWorld.step(tick)
+
+                        // update positions
+                        planetMesh.position.x = planetCollider.position.x
+                        planetMesh.position.y = planetCollider.position.y
+                        planetMesh.position.z = planetCollider.position.z
+
+                        playerShip.position.x = playerShipCollider.position.x
+                        playerShip.position.y = playerShipCollider.position.y
+                        playerShip.position.z = playerShipCollider.position.z
 
                 /** 
                  *  Animate the stars
@@ -290,9 +360,14 @@ function runDat () {
                     (playerShip.position.z * playerShip.position.z)
                 )
                 
-                if (distToOrigin > 300) {
-                    // spin planet
-                    mesh.rotation.y += 0.001; 
+                objective1.innerHTML = " - Investigate the planet: " + round(distToOrigin - 230, 2);
+                
+                if (distToOrigin - 230 < 0) {
+                    objective1.innerHTML = " - do something else"
+                }
+                
+                if (distToOrigin > 280) {
+                    planetMesh.rotation.y += 0.001; 
                 }
 
                 /** 
@@ -320,6 +395,13 @@ function runDat () {
                         break;
                     }
                     case GameState.ONFOOT: {
+                        /*
+                        physicsWorld.gravity.set(
+                            planetMesh.position.x - playerSprite.position.x, 
+                            planetMesh.position.y - playerSprite.position.y,
+                            planetMesh.position.z - playerSprite.position.z
+                        ) // into the origin on every axis
+                        */
                         break;
                     }
                     case GameState.CUTSCENE: {
@@ -347,6 +429,10 @@ function runDat () {
         requestAnimationFrame(update);
     }); 
     
+    function updatePhysicsWorld () {
+
+    }
+    
     function updateInput () {
         var distToOrigin = Math.sqrt(
             (playerShip.position.x * playerShip.position.x) + 
@@ -356,9 +442,9 @@ function runDat () {
 
         switch (currentState) {
             case GameState.MENU: {
-                if ((camera.position.x - playerShip.position.x) > 3.6) { camera.position.x -= 0.01}
-                if ((camera.position.y - playerShip.position.y) > 3.6) { camera.position.y -= 0.01}
-                if ((camera.position.z - playerShip.position.z) > 3.6) { camera.position.z -= 0.01}
+                if ((camera.position.x - playerShip.position.x) > 3.6) { camera.position.x -= (camera.position.x - playerShip.position.x) * 0.002}
+                if ((camera.position.y - playerShip.position.y) > 3.6) { camera.position.y -= (camera.position.y - playerShip.position.y) * 0.002}
+                if ((camera.position.z - playerShip.position.z) > 3.6) { camera.position.z -= (camera.position.z - playerShip.position.z) * 0.002}
                 
                 // correct camrea
                 camera.lookAt(
@@ -372,13 +458,38 @@ function runDat () {
                 break;
             }
             case GameState.FLYING: {
+                
+                // idle flying in aatmosphere
+                if (distToOrigin < 280) {
+                    camera.translateZ(-0.1)
+                    playerShip.translateZ(-0.1)
+                    
+                    // booster feedback
+                    if (boostColourTicker < 25) { // 16777215 is 0xFFFFFF as int
+                        boost1.material.color.setHex(boost1.material.color.getHex() + 0x010101)
+                        boost2.material.color.setHex(boost2.material.color.getHex() + 0x010101)
+                        boost3.material.color.setHex(boost3.material.color.getHex() + 0x010101)
+                        boostColourTicker += 1
+                    }
+                    if (boostColourTicker > 25) { // 16777215 is 0xFFFFFF as int
+                        boost1.material.color.setHex(boost1.material.color.getHex() - 0x010101)
+                        boost2.material.color.setHex(boost2.material.color.getHex() - 0x010101)
+                        boost3.material.color.setHex(boost3.material.color.getHex() - 0x010101)
+                        boostColourTicker -= 1
+                    }
+                    // camera back
+                    if ((camera.position.x - playerShip.position.x) < 5) { camera.position.x += 0.01}
+                    if ((camera.position.y - playerShip.position.y) < 5) { camera.position.y += 0.01}
+                    if ((camera.position.z - playerShip.position.z) < 5) { camera.position.z += 0.01}
+                }
+                
                 // W / ^ - forward
                 if (wKey || upKey) {
                     // do movement
                     if (shift && (distToOrigin > 260)) {
                         // boost on
-                        camera.translateZ(-1)
-                        playerShip.translateZ(-1)  
+                        camera.translateZ(-0.5)
+                        playerShip.translateZ(-0.5)  
                         // booster feedback
                         if (boostColourTicker < 100) { // 16777215 is 0xFFFFFF as int
                             boost1.material.color.setHex(boost1.material.color.getHex() + 0x010101)
@@ -392,8 +503,8 @@ function runDat () {
                         if ((camera.position.z - playerShip.position.z) < 5) { camera.position.z += 0.01}
                     } else {
                         // boost off
-                        camera.translateZ(-0.4)
-                        playerShip.translateZ(-0.4) 
+                        camera.translateZ(-0.2)
+                        playerShip.translateZ(-0.2) 
                         // booster feedback
                         if (boostColourTicker < 50) { // 16777215 is 0xFFFFFF as int
                             boost1.material.color.setHex(boost1.material.color.getHex() + 0x010101)

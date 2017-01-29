@@ -1,7 +1,6 @@
 * {
     font-family: "Courier New", Courier, monospace;
     overflow: hidden;
-    text-align: center;
     color: #FFFFFF;
 }
 
@@ -19,6 +18,10 @@ h2 {
     text-decoration: underline;
 }
 
+h3 {
+    font-size: 0.2em;
+}
+
 header {
     width: 100%;
     cursor: default;
@@ -28,6 +31,7 @@ header {
     width: 38em;
     margin: auto;
     cursor: default;
+    text-align: center;
 }
 
 #beginButton {
@@ -35,10 +39,8 @@ header {
     height: 2em;
     margin: auto;
     color: #111111;
-}
-
-#beginButton {
     cursor: pointer;
+    text-align: center;
 }
 
 #splash {
@@ -47,10 +49,25 @@ header {
     margin-right: auto;
     left: 0;
     right: 0;
+    text-align: center;
 }
 
 #canvasContainer {
     position: absolute;
     z-index: -10;
     
+}
+
+#userInterface {
+    display: none;
+    margin: 1em;
+}
+
+#userInterface h3 {
+    font-size: 0.6em;
+    text-align: left;
+}
+
+#userInterface p {
+    font-size: 0.6em;
 }
